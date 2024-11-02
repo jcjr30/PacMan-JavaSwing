@@ -67,18 +67,19 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         void updateVelocity() {
+            int maxVelocity = tileSize / 4;
 
             if (this.direction == 'U') {
                 this.velocityX = 0;
-                this.velocityY = -tileSize / 4;
+                this.velocityY = -maxVelocity;
             } else if (this.direction == 'D') {
                 this.velocityX = 0;
-                this.velocityY = tileSize / 4;
+                this.velocityY = maxVelocity;
             } else if (this.direction == 'L') {
-                this.velocityX = (-tileSize / 4);
+                this.velocityX = -maxVelocity;
                 this.velocityY = 0;
             } else if (this.direction == 'R') {
-                this.velocityX = (tileSize / 4);
+                this.velocityX = maxVelocity;
                 this.velocityY = 0;
             }
         }
@@ -165,6 +166,8 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     HashSet<Block> fruits;
 
     HashSet<Block> ghosts;
+    int tryRandomMove = 0;
+
     Block pacman;
 
     boolean isFirstFruitAte = false;
@@ -176,14 +179,14 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     Block rightPortal;
 
     Timer gameLoop;
+    boolean debug = true;
 
     char[] directions = {'U', 'D', 'L', 'R'};
     private char directionBuffer;
     Random random = new Random();
 
-    ArrayList<Block> waitingGhostsQueue = new ArrayList<>();
-
     int score = 0;
+    int lastRoundScore = 0;
     int lives = 3;
     boolean gameOver = false;
 
@@ -321,15 +324,30 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             }
         }
 
-        if (score >= 700 && !isFirstFruitAte) {
+        //Draw Power Pellets
+        for (Block powerPellet : powerPellets) {
+            g.drawImage(powerPellet.image, powerPellet.x, powerPellet.y, powerPellet.width, powerPellet.height, null);
+        }
+
+        if (score >= 700 && !isFirstFruitAte && levelsBeaten == 0) {
+            g.drawImage(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize, null);
+            isFirstFruitDrawing = true;
+        } else if (score >= lastRoundScore+700 && !isFirstFruitAte && levelsBeaten > 0) {
             g.drawImage(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize, null);
             isFirstFruitDrawing = true;
         } else {isFirstFruitDrawing = false;}
 
-        if (score >= 1400 && !isSecondFruitAte && isFirstFruitAte) {
+        if (score >= 1400 && !isSecondFruitAte && isFirstFruitAte && levelsBeaten == 0) {
+            g.drawImage(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize, null);
+            isSecondFruitDrawing = true;
+        } else if (score >= lastRoundScore+1400 && !isSecondFruitAte && isFirstFruitAte && levelsBeaten > 0) {
             g.drawImage(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize, null);
             isSecondFruitDrawing = true;
         } else {isSecondFruitDrawing = false;}
+
+        if (debug)  {
+            drawDebugGrid(g);
+        }
 
         g.setColor(Color.WHITE);
         for (Block food : foods) {
@@ -343,6 +361,18 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         } else {
             g.drawString("x" + lives + "  Score: " + score + "  Levels Beaten: " + levelsBeaten, tileSize / 2, tileSize / 2 + 32);
         }
+    }
+    private void drawDebugGrid(Graphics g) {
+        g.setColor(Color.RED);
+        for (int c = 0; c < columnCount; c++) {
+            for (int r = 0; r < rowCount; r++) {
+                int y = r * tileSize;
+                int x = c * tileSize;
+                g.drawRect(x, y, tileSize, tileSize);
+                g.drawString(c + "," + r, x + tileSize/6-2, y+tileSize/6+4);
+            }
+        }
+
     }
 
     private void move() throws IOException {
@@ -433,7 +463,6 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             fruits.remove(fruitEaten);
             fruitEaten = null;
         }
-        //Block fruitEaten2 = null;
         if (isSecondFruitDrawing && !fruits.isEmpty()) {
             for (Block currentFruit : fruits) {
                 if (collision(pacman, currentFruit)) {
@@ -457,6 +486,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
         //Win if foods is empty
         if (foods.isEmpty()) {
+            lastRoundScore = score;
+            isFirstFruitAte = false;
+            isSecondFruitAte = false;
+
+            isFirstFruitDrawing = false;
+            isSecondFruitDrawing = false;
+
             loadMap();
             resetPositions();
             levelsBeaten += 1;
@@ -467,12 +503,35 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     private void ghostAI(Block ghost) {
         if (!ghost.waiting) {
             //Ghost escape start AI
-            if ((ghost.y > tileSize * 17 && ghost.y < tileSize * 19) && (ghost.x > tileSize * 13 + 12 && ghost.x < tileSize * 14 - 12) && ghost.direction != 'U') {
+            if (ghostLeaveStartAi(ghost)) {
                 ghost.updateDirection('U');
             }
             //General Ghost AI
             ghost.x += ghost.velocityX;
             ghost.y += ghost.velocityY;
+
+            tryRandomMove = random.nextInt(100);
+            if (aiHitboxCollision(ghost, pacman)) {
+                if (!isGhostInStartBlock(ghost)) {
+
+                    if (tryRandomMove <= 1) {
+                        if (ghost.x < pacman.x && ghost.direction != 'R') {
+                            ghost.updateDirection('R');
+                        } else if (ghost.x > pacman.x && ghost.direction != 'L') {
+                            ghost.updateDirection('L');
+                        } else if (ghost.y < pacman.y && ghost.direction != 'D') {
+                            ghost.updateDirection('D');
+                        } else if (ghost.y > pacman.y && ghost.direction != 'U') {
+                            ghost.updateDirection('U');
+                        }
+                    }
+                }
+//                else if (tryRandomMove <= 10) {
+//                    char newDirection = directions[random.nextInt(4)];
+//                    ghost.updateDirection(newDirection);
+//                }
+            }
+
             for (HashSet<Block> collideableSet : collidables) {
                 for (Block collideableBlock : collideableSet) {
                     if (collision(ghost, collideableBlock)) {
@@ -485,12 +544,25 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             }
         }
     }
+    private boolean ghostLeaveStartAi(Block ghost) {
+        return (ghost.y > tileSize*17 && ghost.y < tileSize*19) && (ghost.x > tileSize*13+12 && ghost.x < tileSize *14-12) && ghost.direction != 'U';
+    }
+    private boolean isGhostInStartBlock(Block ghost) {
+        return (ghost.y > tileSize*15 && ghost.y < tileSize * 19) && (ghost.x > tileSize * 10 && ghost.x < tileSize * 17);
+    }
 
     private boolean collision(Block a, Block b) {
         return a.x < b.x + b.width &&
                 a.x + a.width > b.x &&
                 a.y < b.y + b.height &&
                 a.y + a.height > b.y;
+    }
+    private boolean aiHitboxCollision(Block a, Block b) {
+        int radius = 224;
+        return a.x < b.x + b.width + radius &&
+                a.x + a.width + radius > b.x &&
+                a.y < b.y + b.height + radius &&
+                a.y + a.height + radius > b.y;
     }
 
     private void resetPositions() {
@@ -533,27 +605,43 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             gameLoop.start();
         }
 
-        if (e.getKeyCode() == KeyEvent.VK_UP) {
-            pacman.updateDirection('U');
-            frameCountTimerStart('U');
-        } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            pacman.updateDirection('D');
-            frameCountTimerStart('D');
-        } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            pacman.updateDirection('L');
-            frameCountTimerStart('L');
-        } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            pacman.updateDirection('R');
-            frameCountTimerStart('R');
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_P:
+                if (gameLoop.isRunning()) {
+                    gameLoop.stop();
+                } else {
+                    gameLoop.start();
+                }
+                break;
+
+            case KeyEvent.VK_F1:
+                debug = !debug;
+                break;
+        }
+
+        char newDirection = switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP, KeyEvent.VK_W -> 'U';
+            case KeyEvent.VK_DOWN, KeyEvent.VK_S -> 'D';
+            case KeyEvent.VK_LEFT, KeyEvent.VK_A -> 'L';
+            case KeyEvent.VK_RIGHT, KeyEvent.VK_D -> 'R';
+            default -> ' ';
+        };
+
+        if (newDirection != ' ' && pacman.direction != newDirection) {
+            pacman.updateDirection(newDirection);
+            frameCountTimerStart(newDirection);
         }
     }
 
     private void frameCountTimerStart(char direction) {
+        if (pacman.direction == direction) {
+            return;
+        }
         if (isFrameCountTimerDone()) {
             frameCountDelay = 2;
             frameCountDelay += frameCount;
             directionBuffer = direction;
-        } else if (!isFrameCountTimerDone() && pacman.direction != directionBuffer) {
+        } else if (pacman.direction != directionBuffer) {
             frameCountTimerEnd();
             frameCountDelay = 2;
             frameCountDelay += frameCount;
