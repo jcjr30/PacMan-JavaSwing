@@ -3,7 +3,7 @@ package com.jcjr30.pacman;
 public class PowerUp {
 
         private boolean isActive;
-        private long duration;
+        private final long duration;
 
         public PowerUp(long duration) {
         this.duration = duration;
