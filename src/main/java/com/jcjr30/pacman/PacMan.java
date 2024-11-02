@@ -53,7 +53,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
             this.x += this.velocityX;
             this.y += this.velocityY;
-            for (HashSet<Block> collideableSet : collideable) {
+            for (HashSet<Block> collideableSet : collidables) {
                 for (Block collideableBlock : collideableSet) {
                     if (collision(this, collideableBlock)) {
                         this.x -= this.velocityX;
@@ -137,6 +137,9 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     private PowerUp powerUp;
 
+    private int frameCount = 0;
+    private int frameCountDelay = 0;
+
 
     // '<'
     HashSet<Block> topLeftCorners;
@@ -146,7 +149,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     HashSet<Block> bottomLeftCorners;
     // '/'
     HashSet<Block> bottomRightCorners;
-    HashSet<Block>[] collideable;
+    HashSet<Block>[] collidables;
 
     // '#
     HashSet<Block> solidWalls;
@@ -160,14 +163,14 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     HashSet<Block> powerPellets;
 
     HashSet<Block> fruits;
-    Block fruitOne;
-    Block fruitTwo;
 
     HashSet<Block> ghosts;
     Block pacman;
 
-    boolean firstFruit = false;
-    boolean secondFruit = false;
+    boolean isFirstFruitAte = false;
+    boolean isFirstFruitDrawing = false;
+    boolean isSecondFruitAte = false;
+    boolean isSecondFruitDrawing = false;
 
     Block leftPortal;
     Block rightPortal;
@@ -175,6 +178,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     Timer gameLoop;
 
     char[] directions = {'U', 'D', 'L', 'R'};
+    private char directionBuffer;
     Random random = new Random();
 
     ArrayList<Block> waitingGhostsQueue = new ArrayList<>();
@@ -190,7 +194,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         setFocusable(true);
 
         //Load images
-        wallImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/wall.png"))).getImage();
+        wallImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/solidWall.png"))).getImage();
         topLeftCornerImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/wall-TopLeftCorner.png"))).getImage();
         topRightCornerImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/wall-TopRightCorner.png"))).getImage();
         bottomLeftCornerImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/wall-BottomLeftCorner.png"))).getImage();
@@ -226,19 +230,19 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
 
     private void loadMap() throws IOException {
-        foods = new HashSet<Block>();
-        powerPellets = new HashSet<Block>();
-        fruits = new HashSet<Block>();
+        foods = new HashSet<>();
+        powerPellets = new HashSet<>();
+        fruits = new HashSet<>();
 
-        ghosts = new HashSet<Block>();
+        ghosts = new HashSet<>();
 
-        topLeftCorners = new HashSet<Block>();
-        topRightCorners = new HashSet<Block>();
-        bottomLeftCorners = new HashSet<Block>();
-        bottomRightCorners = new HashSet<Block>();
-        solidWalls = new HashSet<Block>();
-        vertWalls = new HashSet<Block>();
-        horizWalls = new HashSet<Block>();
+        topLeftCorners = new HashSet<>();
+        topRightCorners = new HashSet<>();
+        bottomLeftCorners = new HashSet<>();
+        bottomRightCorners = new HashSet<>();
+        solidWalls = new HashSet<>();
+        vertWalls = new HashSet<>();
+        horizWalls = new HashSet<>();
 
         //Parse the Tile Map
         char[][] board = BoardLoader.loadBoard();
@@ -285,18 +289,24 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 }
             }
         }
-        collideable = new HashSet[]{topLeftCorners, topRightCorners, bottomLeftCorners, bottomRightCorners, solidWalls, vertWalls, horizWalls};
-        fruits.add(fruitOne = new Block(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize));
+        //Add all the walls to the collidable set
+        collidables = new HashSet[]{topLeftCorners, topRightCorners, bottomLeftCorners, bottomRightCorners, solidWalls, vertWalls, horizWalls};
+
+        //Generate fruits and add to fruits set
+        fruits.add(new Block(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize));
+        fruits.add(new Block(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize));
     }
 
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         draw(g);
     }
-
     private void draw(Graphics g) {
+        frameCount++;
+        //Draw Pac-Man
         g.drawImage(pacman.image, pacman.x, pacman.y, pacman.width, pacman.height, null);
 
+        //Draw ghosts
         for (Block ghost : ghosts) {
             if (powerUp != null && powerUp.isActive()) {
                 g.drawImage(scaredGhostImage, ghost.x, ghost.y, ghost.width, ghost.height, null);
@@ -304,37 +314,22 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 g.drawImage(ghost.image, ghost.x, ghost.y, ghost.width, ghost.height, null);
             }
         }
-        for (Block solidWall : solidWalls) {
-            g.drawImage(solidWall.image, solidWall.x, solidWall.y, solidWall.width, solidWall.height, null);
-        }
-        for (Block vertWall : vertWalls) {
-            g.drawImage(vertWall.image, vertWall.x, vertWall.y, vertWall.width, vertWall.height, null);
-        }
-        for (Block horizWall : horizWalls) {
-            g.drawImage(horizWall.image, horizWall.x, horizWall.y, horizWall.width, horizWall.height, null);
-        }
-        for (Block leftCorner : topLeftCorners) {
-            g.drawImage(leftCorner.image, leftCorner.x, leftCorner.y, leftCorner.width, leftCorner.height, null);
-        }
-        for (Block rightCorner : topRightCorners) {
-            g.drawImage(rightCorner.image, rightCorner.x, rightCorner.y, rightCorner.width, rightCorner.height, null);
-        }
-        for (Block leftCorner : bottomLeftCorners) {
-            g.drawImage(leftCorner.image, leftCorner.x, leftCorner.y, leftCorner.width, leftCorner.height, null);
-        }
-        for (Block rightCorner : bottomRightCorners) {
-            g.drawImage(rightCorner.image, rightCorner.x, rightCorner.y, rightCorner.width, rightCorner.height, null);
-        }
-        for (Block powerPellet : powerPellets) {
-            g.drawImage(powerPellet.image, powerPellet.x, powerPellet.y, powerPellet.width, powerPellet.height, null);
+        //Draw walls
+        for (HashSet<Block> anyWall : collidables) {
+            for (Block wall : anyWall) {
+                g.drawImage(wall.image, wall.x, wall.y, wall.width, wall.height, null);
+            }
         }
 
-        if (score > 700 && !firstFruit) {
+        if (score >= 700 && !isFirstFruitAte) {
             g.drawImage(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize, null);
-        }
-        if (score > 1400 && !secondFruit) {
+            isFirstFruitDrawing = true;
+        } else {isFirstFruitDrawing = false;}
+
+        if (score >= 1400 && !isSecondFruitAte && isFirstFruitAte) {
             g.drawImage(cherryImage, tileSize * 14 - 16, tileSize * 20, tileSize, tileSize, null);
-        }
+            isSecondFruitDrawing = true;
+        } else {isSecondFruitDrawing = false;}
 
         g.setColor(Color.WHITE);
         for (Block food : foods) {
@@ -354,8 +349,16 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         pacman.x += pacman.velocityX;
         pacman.y += pacman.velocityY;
 
+        //Set PacMan image based on velocity
+        updatePacManImage();
+
+        if (!isFrameCountTimerDone()) {
+            System.out.println("Frame Count: " + frameCount);
+            pacman.updateDirection(directionBuffer);
+        }
+
         //Wall collision detection
-        for (HashSet<Block> collideableSet : collideable) {
+        for (HashSet<Block> collideableSet : collidables) {
             for (Block collideableBlock : collideableSet) {
                 if (collision(pacman, collideableBlock)) {
                     pacman.x -= pacman.velocityX;
@@ -416,18 +419,27 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
         powerPellets.remove(powerPelletEaten);
 
-        //Fruit Collision
+
+        //Fruit Collision DEBUG
         Block fruitEaten = null;
-        for (Block fruit : fruits) {
-            if (collision(pacman, fruit)) {
-                if (!firstFruit) {
-                    firstFruit = true;
-                    fruitEaten = fruit;
+        if (isFirstFruitDrawing && !fruits.isEmpty()) {
+            for (Block currentFruit : fruits) {
+                if (collision(pacman, currentFruit)) {
+                    isFirstFruitAte = true;
                     score += 100;
-                } else if (!secondFruit && firstFruit) {
-                    secondFruit = true;
-                    fruitEaten = fruit;
+                    fruitEaten = currentFruit;
+                }
+            }
+            fruits.remove(fruitEaten);
+            fruitEaten = null;
+        }
+        //Block fruitEaten2 = null;
+        if (isSecondFruitDrawing && !fruits.isEmpty()) {
+            for (Block currentFruit : fruits) {
+                if (collision(pacman, currentFruit)) {
+                    isSecondFruitAte = true;
                     score += 100;
+                    fruitEaten = currentFruit;
                 }
             }
             fruits.remove(fruitEaten);
@@ -461,7 +473,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             //General Ghost AI
             ghost.x += ghost.velocityX;
             ghost.y += ghost.velocityY;
-            for (HashSet<Block> collideableSet : collideable) {
+            for (HashSet<Block> collideableSet : collidables) {
                 for (Block collideableBlock : collideableSet) {
                     if (collision(ghost, collideableBlock)) {
                         ghost.x -= ghost.velocityX;
@@ -523,22 +535,46 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
         if (e.getKeyCode() == KeyEvent.VK_UP) {
             pacman.updateDirection('U');
+            frameCountTimerStart('U');
         } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             pacman.updateDirection('D');
+            frameCountTimerStart('D');
         } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
             pacman.updateDirection('L');
+            frameCountTimerStart('L');
         } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
             pacman.updateDirection('R');
+            frameCountTimerStart('R');
         }
+    }
 
-        if (pacman.direction == 'U') {
-            pacman.image = pacmanUpImage;
-        } else if (pacman.direction == 'D') {
-            pacman.image = pacmanDownImage;
-        } else if (pacman.direction == 'L') {
-            pacman.image = pacmanLeftImage;
-        } else if (pacman.direction == 'R') {
+    private void frameCountTimerStart(char direction) {
+        if (isFrameCountTimerDone()) {
+            frameCountDelay = 2;
+            frameCountDelay += frameCount;
+            directionBuffer = direction;
+        } else if (!isFrameCountTimerDone() && pacman.direction != directionBuffer) {
+            frameCountTimerEnd();
+            frameCountDelay = 2;
+            frameCountDelay += frameCount;
+            directionBuffer = direction;
+        }
+    }
+    private boolean isFrameCountTimerDone() {
+        return frameCount >= frameCountDelay;
+    }
+    private void frameCountTimerEnd() {
+        frameCountDelay = 0;
+    }
+    private void updatePacManImage() {
+        if (pacman.velocityX > 0) {
             pacman.image = pacmanRightImage;
+        } else if (pacman.velocityX < 0) {
+            pacman.image = pacmanLeftImage;
+        } else if (pacman.velocityY > 0) {
+            pacman.image = pacmanDownImage;
+        } else if (pacman.velocityY < 0) {
+            pacman.image = pacmanUpImage;
         }
     }
 
