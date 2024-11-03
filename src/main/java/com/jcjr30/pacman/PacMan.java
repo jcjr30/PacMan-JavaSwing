@@ -1,5 +1,7 @@
 package com.jcjr30.pacman;
 
+import com.jcjr30.boardCreator.BoardCreator;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -178,7 +180,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     Block rightPortal;
 
     Timer gameLoop;
-    boolean debug = true;
+    boolean debug = false;
 
     char[] directions = {'U', 'D', 'L', 'R'};
     private char directionBuffer;
@@ -188,6 +190,9 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     int lastRoundScore = 0;
     int lives = 3;
     boolean gameOver = false;
+
+    boolean customBoard = false;
+    File file = new File("data/customBoards/customBoard.txt");
 
     PacMan() throws IOException, FontFormatException {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
@@ -235,7 +240,6 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         foods = new HashSet<>();
         powerPellets = new HashSet<>();
         fruits = new HashSet<>();
-
         ghosts = new HashSet<>();
 
         topLeftCorners = new HashSet<>();
@@ -246,8 +250,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         vertWalls = new HashSet<>();
         horizWalls = new HashSet<>();
 
-        //Parse the Tile Map
-        char[][] board = BoardLoader.loadBoard();
+        char[][] board;
+
+        if (customBoard) {
+            board = BoardLoader.loadBoard(file);
+        } else {
+            board = BoardLoader.loadBoard("board/board.txt");
+        }
 
         for (int r = 0; r < rowCount; r++) {
             for (int c = 0; c < columnCount; c++) {
@@ -348,6 +357,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             drawDebugGrid(g);
         }
 
+        //Draw Food
         g.setColor(Color.WHITE);
         for (Block food : foods) {
             g.fillRect(food.x, food.y, food.width, food.height);
@@ -605,17 +615,23 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_P:
+            case KeyEvent.VK_P -> {
                 if (gameLoop.isRunning()) {
                     gameLoop.stop();
                 } else {
                     gameLoop.start();
                 }
-                break;
-
-            case KeyEvent.VK_F1:
-                debug = !debug;
-                break;
+            }
+            case KeyEvent.VK_F1 -> debug = !debug;
+            case KeyEvent.VK_F5 -> {
+                customBoard = true;
+                try {
+                    loadMap();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            case KeyEvent.VK_F12 -> App.startBoardCreator();
         }
 
         char newDirection = switch (e.getKeyCode()) {

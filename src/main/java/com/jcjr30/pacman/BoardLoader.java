@@ -1,23 +1,30 @@
 package com.jcjr30.pacman;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 
 public class BoardLoader {
 
-    public static char[][] loadBoard() throws IOException {
-        String filePath = "board/board.txt";
-        InputStream inputStream = BoardLoader.class.getResourceAsStream(filePath);
+    public static char[][] loadBoard(String resourcePath) throws IOException {
+        //filePath = "board/board.txt";
+        InputStream inputStream = BoardLoader.class.getResourceAsStream(resourcePath);
         if (inputStream == null) {
-            throw new IOException("File not found: " + filePath);
+            throw new IOException("File not found: " + resourcePath);
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             return reader.lines()
                     .map(String::toCharArray)
                     .toArray(char[][]::new);
+        }
+    }
+
+    public static char[][] loadBoard (File file)    {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            return reader.lines()
+                    .map(String::toCharArray)
+                    .toArray(char[][]::new);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
