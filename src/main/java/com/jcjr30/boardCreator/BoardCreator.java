@@ -5,13 +5,12 @@ import com.jcjr30.pacman.App;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
 
 public class BoardCreator extends JPanel implements KeyListener, ActionListener, MouseListener {
 
-    private JFrame frame;
+    private final JFrame frame;
 
     private char tool = ' ';
 

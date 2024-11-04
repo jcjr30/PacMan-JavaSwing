@@ -21,13 +21,13 @@ public class App {
     static int boardWidth = columnCount * tileSize;
     static int boardHeight = rowCount * tileSize;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, FontFormatException {
 
 
         startScreen = new StartScreen();
 
         frame = new JFrame("Pac Man");
-        frame.setSize(boardWidth, boardHeight);
+        frame.setSize(boardWidth+16, boardHeight+16);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
