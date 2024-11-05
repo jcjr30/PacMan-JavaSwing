@@ -11,7 +11,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class BoardCreator extends JPanel implements KeyListener, ActionListener, MouseListener {
+public class BoardCreator extends JPanel implements KeyListener, MouseListener {
 
     private final JFrame frame;
 
@@ -22,6 +22,9 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
     int tileSize = 32;
     int boardWidth = columnCount * tileSize;
     int boardHeight = rowCount * tileSize;
+
+    private int initSelectedTileX;
+    private int initSelectedTileY;
 
     private final Image wallImage;
     private final Image topLeftCornerImage;
@@ -341,14 +344,10 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
                 .anyMatch(ch -> ch == compare);
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
-    }
-
 
     @Override
     public void mousePressed(MouseEvent e) {
+
         int x = e.getX() / tileSize;
         int y = (e.getY() / tileSize) - 1;
         int centerX = x * tileSize + tileSize / 2;
@@ -405,16 +404,51 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
             } else if (x == 28 && y == 35) {
                 System.out.println("Return arrow clicked");
                 frame.remove(this);
+                frame.removeMouseListener(this);
+                frame.removeKeyListener(this);
+
                 frame.add(App.startScreen);
                 frame.revalidate();
                 frame.setSize(boardWidth + 16, boardHeight + 16);
                 frame.repaint();
             }
             else if (x != 28) {
+                initSelectedTileX = x;
+                initSelectedTileY = y;
+
                 drawTile(x, y);
             }
         }
     }
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        int x = e.getX() / tileSize;
+        int y = (e.getY() / tileSize) - 1;
+
+        int xDiff = initSelectedTileX - x;
+        int yDiff = initSelectedTileY - y;
+
+        if ((x != initSelectedTileX || y != initSelectedTileY) && x != 28) {
+            while (xDiff != 0 || yDiff != 0) {
+                if (xDiff > 0) {
+                    x++;
+                    xDiff--;
+                } else if (xDiff < 0) {
+                    x--;
+                    xDiff++;
+                }
+                if (yDiff > 0) {
+                    y++;
+                    yDiff--;
+                } else if (yDiff < 0) {
+                    y--;
+                    yDiff++;
+                }
+                drawTile(x, y);
+            }
+        }
+    }
+
     @Override
     public void keyPressed(KeyEvent e) {
     }
@@ -433,8 +467,6 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
     @Override
     public void keyReleased(KeyEvent e) {
     }
-    @Override
-    public void mouseReleased(MouseEvent e) {
-    }
+
 }
 

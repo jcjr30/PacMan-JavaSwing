@@ -1,6 +1,7 @@
 package com.jcjr30.pacman;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -109,6 +110,7 @@ public class StartScreen extends JPanel implements ActionListener, ImageObserver
 
     private static void chooseFile() {
         JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt"));
         int result = fileChooser.showOpenDialog(null);
 
         if (result == JFileChooser.APPROVE_OPTION) {
