@@ -187,13 +187,21 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     boolean gameOver = false;
 
     boolean customBoard = false;
-    File file = new File("data/customBoards/customBoard.txt");
+    File customBoardFile;
 
-    PacMan() throws IOException {
+    boolean pacManFakeAi = true;
+
+    PacMan(String boardPath) throws IOException {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setBackground(Color.BLACK);
         addKeyListener(this);
         setFocusable(true);
+
+        if (boardPath != null && !boardPath.equals("board/board.txt")) {
+            customBoard = true;
+            customBoardFile = new File(boardPath);
+            pacManFakeAi = false;
+        }
 
         //Load images
         wallImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/solidWall.png"))).getImage();
@@ -226,7 +234,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         gameLoop = new Timer(50, this); //20fps
-        //gameLoop.start();
+        gameLoop.start();
     }
 
     private void loadMap() throws IOException {
@@ -246,7 +254,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         char[][] board;
 
         if (customBoard) {
-            board = BoardLoader.loadBoard(file);
+            board = BoardLoader.loadBoard(customBoardFile);
         } else {
             board = BoardLoader.loadBoard("board/board.txt");
         }
@@ -308,6 +316,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     private void draw(Graphics g) {
         frameCount++;
+
+        //Cage in ghosts in start screen
+        if (pacManFakeAi) {
+            collidables[4].add(new Block(wallImage, tileSize * 13, tileSize * 15, tileSize, tileSize));
+            collidables[4].add(new Block(wallImage, tileSize * 14, tileSize * 15, tileSize, tileSize));
+        }
+
         //Draw Pac-Man
         g.drawImage(pacman.image, pacman.x, pacman.y, pacman.width, pacman.height, null);
 
@@ -362,11 +377,13 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         //Score
-        g.setFont(highScoreFont.deriveFont(Font.PLAIN, 20));
-        if (gameOver) {
-            g.drawString("Game Over: " + score, tileSize / 2, tileSize / 2 + 32);
-        } else {
-            g.drawString("x" + lives + "  Score: " + score + "  Levels Beaten: " + levelsBeaten, tileSize / 2, tileSize / 2 + 32);
+        if (!pacManFakeAi) {
+            g.setFont(highScoreFont.deriveFont(Font.PLAIN, 20));
+            if (gameOver) {
+                g.drawString("Game Over: " + score, tileSize / 2, tileSize / 2 + 32);
+            } else {
+                g.drawString("x" + lives + "  Score: " + score + "  Levels Beaten: " + levelsBeaten, tileSize / 2, tileSize / 2 + 32);
+            }
         }
     }
 
@@ -384,6 +401,21 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
 
     private void move() throws IOException {
+
+        if (pacManFakeAi) {
+            if (pacman.x == tileSize * 13 && pacman.y == tileSize * 26) {
+                pacman.updateDirection('R');
+            } else if (pacman.x == tileSize * 21 && pacman.y == tileSize * 26) {
+                pacman.updateDirection('U');
+            } else if (pacman.x == tileSize * 21 && pacman.y == tileSize * 8)  {
+                pacman.updateDirection('L');
+            } else if (pacman.x == tileSize * 6 && pacman.y == tileSize * 8) {
+                pacman.updateDirection('D');
+            } else if (pacman.x == tileSize * 6 && pacman.y == tileSize * 26) {
+                pacman.updateDirection('R');
+            }
+        }
+
         pacman.x += pacman.velocityX;
         pacman.y += pacman.velocityY;
 
@@ -566,6 +598,11 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    public void setPacManAi() throws IOException {
+        pacManFakeAi = false;
+        loadMap();
+        resetPositions();
+    }
 
     private boolean ghostLeaveStartAi(Block ghost) {
         return (ghost.y > tileSize * 17 && ghost.y < tileSize * 19) && (ghost.x > tileSize * 13 + 12 && ghost.x < tileSize * 14 - 12) && ghost.direction != 'U';

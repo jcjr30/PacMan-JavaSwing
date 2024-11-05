@@ -12,7 +12,7 @@ public class App {
     public static PacMan pacManGame;
     public static JFrame frame;
     private static BoardCreator boardCreator;
-    private static StartScreen startScreen;
+    public static StartScreen startScreen;
 
     static int columnCount = 28;
     static int rowCount = 36;
@@ -32,7 +32,6 @@ public class App {
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        //pacManGame = new PacMan();
         frame.add(startScreen);
 
         startScreen.requestFocus();
@@ -41,10 +40,12 @@ public class App {
         boardCreator = new BoardCreator();
     }
 
-    public static void startPacManGame() throws IOException, FontFormatException {
+    public static void startPacManGame(String boardPath) throws IOException, FontFormatException {
         frame.remove(startScreen);
 
-        pacManGame = new PacMan();
+        pacManGame = new PacMan(boardPath);
+
+        pacManGame.setPacManAi();
 
         frame.add(pacManGame);
         frame.pack();

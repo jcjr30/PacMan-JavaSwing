@@ -9,25 +9,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
-import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
-
 public class StartScreen extends JPanel implements ActionListener, ImageObserver {
+
+    int tileSize = 32;
 
     Image bgGif;
     private static Font highScoreFont;
     private static Font titleFont;
 
-    private static final String videoPath = "vid/PacManStartScreenBG.mp4";
+    private static String boardPath = "board/board.txt";
 
-    int frame = 0;
-
-    StartScreen() throws IOException, FontFormatException {
+    public StartScreen() throws IOException, FontFormatException {
 
         ImageIcon bgIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/bg.gif")));
         bgGif = bgIcon.getImage();
@@ -44,57 +36,50 @@ public class StartScreen extends JPanel implements ActionListener, ImageObserver
         this.setLayout(new BorderLayout());
         this.add(layeredPane);
 
-        JFXPanel fxPanel = new JFXPanel();
 
-        SwingUtilities.invokeLater(() -> {
-                    fxPanel.setBounds(0, 0, 896, 1152);
-                    layeredPane.add(fxPanel, JLayeredPane.DEFAULT_LAYER);
-                });
+        JButton loadButton = new JButton("Load Map");
 
-        Platform.runLater(() -> {
+        loadButton.setForeground(Color.YELLOW);
+        loadButton.setFont(titleFont.deriveFont(Font.PLAIN, 30));
+        loadButton.setBorderPainted(false);
+        loadButton.setContentAreaFilled(false);
+        loadButton.setBounds(tileSize * 20, tileSize, loadButton.getPreferredSize().width, 50);
+        loadButton.addActionListener(e -> {chooseFile();});
 
-            Media media = new Media(new File(Objects.requireNonNull(getClass().getResource(videoPath)).getFile()).toURI().toString());
-            MediaPlayer mediaPlayer = new MediaPlayer(media);
-            MediaView mediaView = new MediaView(mediaPlayer);
+        layeredPane.add(loadButton, JLayeredPane.PALETTE_LAYER);
 
-            StackPane root = new StackPane();
-            root.getChildren().add(mediaView);
 
-            Scene scene = new Scene(root, 896, 1152);
+        PacMan pacMan = new PacMan(null);
+        pacMan.setBounds(0, 0, 896, 1152);
+        pacMan.setLayout(null);
+        layeredPane.add(pacMan, JLayeredPane.DEFAULT_LAYER);
 
-            fxPanel.setScene(scene);
-            mediaPlayer.play();
-        });
 
         JButton startButton = new JButton("Start");
 
         startButton.setForeground(Color.YELLOW);
         startButton.setFont(titleFont.deriveFont(Font.PLAIN, 30));
-
         startButton.setBorderPainted(false);
         startButton.setContentAreaFilled(false);
-
-        startButton.setBounds(0, 0, 200, 50);
-
+        startButton.setBounds(tileSize * 4, tileSize, startButton.getPreferredSize().width, 50);
         startButton.addActionListener(e -> {
             try {
-                App.startPacManGame();
+                pacMan.gameLoop.stop();
+                App.startPacManGame(boardPath);
             } catch (IOException | FontFormatException ex) {
                 throw new RuntimeException(ex);
             }
         });
         layeredPane.add(startButton, JLayeredPane.PALETTE_LAYER);
 
-        JButton createButton = new JButton("Create Board");
+
+        JButton createButton = new JButton("Create Map");
 
         createButton.setForeground(Color.YELLOW);
         createButton.setFont(titleFont.deriveFont(Font.PLAIN, 30));
-
         createButton.setBorderPainted(false);
         createButton.setContentAreaFilled(false);
-
-        createButton.setBounds(0, 50, 200, 50);
-
+        createButton.setBounds(tileSize * 12, tileSize, createButton.getPreferredSize().width, 50);
         createButton.addActionListener(e -> App.startBoardCreator());
 
         layeredPane.add(createButton, JLayeredPane.PALETTE_LAYER);
@@ -112,6 +97,7 @@ public class StartScreen extends JPanel implements ActionListener, ImageObserver
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, App.boardWidth, App.boardHeight);
     }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         repaint();
@@ -120,4 +106,15 @@ public class StartScreen extends JPanel implements ActionListener, ImageObserver
     public static Font getHighScoreFont() {
         return highScoreFont;
     }
+
+    private static void chooseFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        int result = fileChooser.showOpenDialog(null);
+
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            boardPath = file.getAbsolutePath();
+        }
+    }
 }
+

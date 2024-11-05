@@ -35,10 +35,17 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
 
     private final Image powerPelletImage;
 
+    private final Image leftPortalImage;
+    private final Image rightPortalImage;
+
     private final Image eraserImage;
+
+    private final Image returnArrowImage;
 
     char[][] board;
 
+    // add String filepath to constructor to create board from file
+    //********************************************************************************************************************
     public BoardCreator() {
 
         //Load images
@@ -56,6 +63,11 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
         pacmanRightImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/pacmanRight.png"))).getImage();
 
         powerPelletImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/powerPellet.png"))).getImage();
+
+        leftPortalImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/leftPortal.png"))).getImage();
+        rightPortalImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/rightPortal.png"))).getImage();
+
+        returnArrowImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/returnArrow.png"))).getImage();
 
         eraserImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/eraser.png"))).getImage();
 
@@ -100,7 +112,13 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
         g.drawImage(powerPelletImage, xPos + 2, tileSize * 10 + 4, tileSize - 8, tileSize - 8, null);
         g.fillRect(xPos + 10, tileSize * 11 + 12, tileSize - 24, tileSize - 24);
 
-        g.drawImage(eraserImage, xPos, tileSize * 12 + 2, tileSize - 4, tileSize - 4, null);
+        g.drawImage(leftPortalImage, xPos, tileSize * 12 + 2, tileSize - 4, tileSize - 4, null);
+        g.drawImage(rightPortalImage, xPos, tileSize * 13 + 2, tileSize - 4, tileSize - 4, null);
+
+        g.drawImage(eraserImage, xPos, tileSize * 19 + 2, tileSize - 4, tileSize - 4, null);
+
+        g.drawImage(returnArrowImage, xPos, tileSize * 35 + 2, tileSize - 4, tileSize - 4, null);
+
     }
 
     private void toolSelect(char toolSelection) {
@@ -199,7 +217,24 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
             g.setColor(Color.WHITE);
             g.fillRect(x * tileSize + 14, y * tileSize + 14, tileSize - 28, tileSize - 28);
             addToBoard(x, y, '.');
-        } else if (this.tool == 'E') {
+        } else if (this.tool == 'L') {
+            Graphics g = getGraphics();
+            if (!containsChar(board, '1')) {
+                clearSquare(x, y);
+                g.drawImage(leftPortalImage, x * tileSize, y * tileSize, tileSize, tileSize, null);
+                addToBoard(x, y, '1');
+            }
+        } else if (this.tool == 'R') {
+            Graphics g = getGraphics();
+            if (!containsChar(board, '2')) {
+                clearSquare(x, y);
+                g.drawImage(rightPortalImage, x * tileSize, y * tileSize, tileSize, tileSize, null);
+                addToBoard(x, y, '2');
+            }
+        }
+
+
+        else if (this.tool == 'E') {
             clearSquare(x, y);
             addToBoard(x, y, ' ');
         }
@@ -272,9 +307,23 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
                 System.out.println("Food tile clicked");
                 toolSelect('.');
             } else if (x == 28 && y == 12) {
+                System.out.println("Left portal clicked");
+                toolSelect('L');
+            } else if (x == 28 && y == 13) {
+                System.out.println("Right portal clicked");
+                toolSelect('R');
+            } else if (x == 28 && y == 19) {
                 System.out.println("Eraser clicked");
                 toolSelect('E');
-            } else if (x != 28) {
+            } else if (x == 28 && y == 35) {
+                System.out.println("Return arrow clicked");
+                frame.remove(this);
+                frame.add(App.startScreen);
+                frame.revalidate();
+                frame.setSize(boardWidth + 16, boardHeight + 16);
+                frame.repaint();
+            }
+            else if (x != 28) {
                 drawTile(x, y);
             }
         }
