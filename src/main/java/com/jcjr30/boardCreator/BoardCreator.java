@@ -2,13 +2,12 @@ package com.jcjr30.boardCreator;
 
 import com.jcjr30.pacman.App;
 import com.jcjr30.pacman.BoardLoader;
-import com.jcjr30.pacman.PacMan;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -82,9 +81,6 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
             for (int r = 0; r < rowCount; r++) {
                 for (int c = 0; c < columnCount; c++) {
                     char tileMapChar = board[r][c];
-
-                    int x = c * tileSize;
-                    int y = r * tileSize;
 
                     if (tileMapChar == '\\') {
                         board[r][c] = '\\';
