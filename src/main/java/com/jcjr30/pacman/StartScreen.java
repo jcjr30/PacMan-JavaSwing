@@ -45,7 +45,7 @@ public class StartScreen extends JPanel implements ActionListener, ImageObserver
         loadButton.setBorderPainted(false);
         loadButton.setContentAreaFilled(false);
         loadButton.setBounds(tileSize * 20, tileSize, loadButton.getPreferredSize().width, 50);
-        loadButton.addActionListener(e -> {chooseFile();});
+        loadButton.addActionListener(e -> chooseFile());
 
         layeredPane.add(loadButton, JLayeredPane.PALETTE_LAYER);
 
