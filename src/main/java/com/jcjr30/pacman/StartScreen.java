@@ -17,7 +17,7 @@ public class StartScreen extends JPanel implements ActionListener, ImageObserver
     private static Font highScoreFont;
     private static Font titleFont;
 
-    private static String boardPath = "board/board.txt";
+    private static String boardPath = null;
 
     public StartScreen() throws IOException, FontFormatException {
 
@@ -80,7 +80,7 @@ public class StartScreen extends JPanel implements ActionListener, ImageObserver
         createButton.setBorderPainted(false);
         createButton.setContentAreaFilled(false);
         createButton.setBounds(tileSize * 12, tileSize, createButton.getPreferredSize().width, 50);
-        createButton.addActionListener(e -> App.startBoardCreator());
+        createButton.addActionListener(e -> App.startBoardCreator(boardPath));
 
         layeredPane.add(createButton, JLayeredPane.PALETTE_LAYER);
 

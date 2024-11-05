@@ -685,7 +685,6 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                     throw new RuntimeException(ex);
                 }
             }
-            case KeyEvent.VK_F12 -> App.startBoardCreator();
         }
 
         //Movement keys

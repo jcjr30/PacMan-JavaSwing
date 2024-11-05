@@ -1,10 +1,14 @@
 package com.jcjr30.boardCreator;
 
 import com.jcjr30.pacman.App;
+import com.jcjr30.pacman.BoardLoader;
+import com.jcjr30.pacman.PacMan;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -46,7 +50,7 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
 
     // add String filepath to constructor to create board from file
     //********************************************************************************************************************
-    public BoardCreator() {
+    public BoardCreator(String filepath) {
 
         //Load images
         wallImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/solidWall.png"))).getImage();
@@ -71,7 +75,53 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
 
         eraserImage = new ImageIcon(Objects.requireNonNull(getClass().getResource("img/eraser.png"))).getImage();
 
-        createBoard();
+        if (filepath != null) {
+            File file = new File(filepath);
+            board = BoardLoader.loadBoard(file);
+
+            for (int r = 0; r < rowCount; r++) {
+                for (int c = 0; c < columnCount; c++) {
+                    char tileMapChar = board[r][c];
+
+                    int x = c * tileSize;
+                    int y = r * tileSize;
+
+                    if (tileMapChar == '\\') {
+                        board[r][c] = '\\';
+                    } else if (tileMapChar == '/') {
+                        board[r][c] = '/';
+                    } else if (tileMapChar == '<') {
+                        board[r][c] = '<';
+                    } else if (tileMapChar == '>') {
+                        board[r][c] = '>';
+                    } else if (tileMapChar == '#') {
+                        board[r][c] = '#';
+                    } else if (tileMapChar == '|') {
+                    } else if (tileMapChar == '-') {
+                    } else if (tileMapChar == '.') {
+                        board[r][c] = '.';
+                    } else if (tileMapChar == 'P') {
+                        board[r][c] = 'P';
+                    } else if (tileMapChar == 'r') {
+                        board[r][c] = 'r';
+                    } else if (tileMapChar == 'b') {
+                        board[r][c] = 'b';
+                    } else if (tileMapChar == 'p') {
+                        board[r][c] = 'p';
+                    } else if (tileMapChar == 'o') {
+                        board[r][c] = 'o';
+                    } else if (tileMapChar == '1') {
+                        board[r][c] = '1';
+                    } else if (tileMapChar == '2') {
+                        board[r][c] = '2';
+                    } else if (tileMapChar == ',') {
+                        board[r][c] = ',';
+                    }
+                }
+            }
+        } else {
+            createBoard();
+        }
 
         this.frame = App.frame;
         frame.addMouseListener(this);
@@ -119,6 +169,47 @@ public class BoardCreator extends JPanel implements KeyListener, ActionListener,
 
         g.drawImage(returnArrowImage, xPos, tileSize * 35 + 2, tileSize - 4, tileSize - 4, null);
 
+        for (int r = 0; r < rowCount; r++) {
+            for (int c = 0; c < columnCount; c++) {
+                char tileMapChar = board[r][c];
+
+                int x = c * tileSize;
+                int y = r * tileSize;
+
+                if (tileMapChar == '\\') {
+                    g.drawImage(bottomLeftCornerImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == '/') {
+                    g.drawImage(bottomRightCornerImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == '<') {
+                    g.drawImage(topLeftCornerImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == '>') {
+                    g.drawImage(topRightCornerImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == '#') {
+                    g.drawImage(wallImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == '|') {
+                } else if (tileMapChar == '-') {
+                } else if (tileMapChar == '.') {
+                    g.setColor(Color.WHITE);
+                    g.fillRect(x + 14, y + 14, tileSize - 28, tileSize - 28);
+                } else if (tileMapChar == 'P') {
+                    g.drawImage(pacmanRightImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == 'r') {
+                    g.drawImage(redGhostImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == 'b') {
+                    g.drawImage(blueGhostImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == 'p') {
+                    g.drawImage(pinkGhostImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == 'o') {
+                    g.drawImage(orangeGhostImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == '1') {
+                    g.drawImage(leftPortalImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == '2') {
+                    g.drawImage(rightPortalImage, x, y, tileSize, tileSize, null);
+                } else if (tileMapChar == ',') {
+                    g.drawImage(powerPelletImage, x + 3, y + 3, tileSize - 6, tileSize - 6, null);
+                }
+            }
+        }
     }
 
     private void toolSelect(char toolSelection) {

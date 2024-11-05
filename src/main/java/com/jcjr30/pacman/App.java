@@ -37,7 +37,6 @@ public class App {
         startScreen.requestFocus();
         frame.setVisible(true);
 
-        boardCreator = new BoardCreator();
     }
 
     public static void startPacManGame(String boardPath) throws IOException, FontFormatException {
@@ -53,7 +52,9 @@ public class App {
         frame.setVisible(true);
     }
 
-    public static void startBoardCreator() {
+    public static void startBoardCreator(String boardPath) {
+        boardCreator = new BoardCreator(boardPath);
+
         frame.remove(startScreen);
         frame.add(boardCreator);
         frame.pack();
