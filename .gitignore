@@ -40,3 +40,4 @@ build/
 /src/main/resources/com/jcjr30/pacman/fonts/CrackMan.TTF
 /src/main/resources/com/jcjr30/pacman/fonts/emulogic.ttf
 /out/
+/.idea/artifacts/unnamed.xml
